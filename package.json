@@ -1,0 +1,37 @@
+{
+  "name": "portable-gantt-chart",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "devDependencies": {
+    "html-inline": "^1.2.0",
+    "html-loader": "^2.1.2",
+    "html-webpack-plugin": "^5.3.1",
+    "mkdirp": "^1.0.4",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.3.2",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.0"
+  },
+  "scripts": {
+    "buildts": "./node_modules/.bin/tsc",
+    "buildwebpack": "./node_modules/.bin/webpack",
+    "mkdirdeliverable": "./node_modules/.bin/mkdirp ./deliverable",
+    "inlinejs": "./node_modules/.bin/html-inline ./built/main.html -o ./deliverable/portable-gantt-chart.html",
+    "cleanbuilt": "rimraf ./built",
+    "cleandeliverable": "rimraf ./deliverable",
+    "build": "npm run buildts && npm run buildwebpack && npm run mkdirdeliverable && npm run inlinejs",
+    "clean": "npm run cleanbuilt & npm run cleandeliverable",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lotcarnage/portable-gantt-chart.git"
+  },
+  "author": "@lot_carnage",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/lotcarnage/portable-gantt-chart/issues"
+  },
+  "homepage": "https://github.com/lotcarnage/portable-gantt-chart#readme"
+}

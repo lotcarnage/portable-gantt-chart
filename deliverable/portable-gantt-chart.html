@@ -1,0 +1,436 @@
+<html lang="ja">
+
+<head>
+	<meta charset="UTF-8">
+
+	<style>
+		body {
+			background-color: slategrey;
+		}
+	</style>
+</head>
+
+<body>
+<script defer>/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+var __webpack_exports__ = {};
+/*!***********************!*\
+  !*** ./built/main.js ***!
+  \***********************/
+
+var DAG;
+(function (DAG) {
+    class Matrix {
+        constructor(order) {
+            const matrix = new Array(order);
+            for (let i = 0; i < order; i++) {
+                matrix[i] = new Array(order);
+            }
+            this.matrix_ = matrix;
+            this.order_ = order;
+        }
+        get order() {
+            return this.order_;
+        }
+        get matrix() {
+            return this.matrix_;
+        }
+        Duplicate() {
+            const duplicated = new Matrix(this.order_);
+            for (let j = 0; j < this.order_; j++) {
+                for (let i = 0; i < this.order_; i++) {
+                    duplicated.matrix[j][i] = this.matrix_[j][i];
+                }
+            }
+            return duplicated;
+        }
+    }
+    function SetIdentity(matrix) {
+        for (let j = 0; j < matrix.order; j++) {
+            for (let i = 0; i < matrix.order; i++) {
+                matrix.matrix[j][i] = (i == j);
+            }
+        }
+        return matrix;
+    }
+    function MultiplyMatrix(lhv, rhv) {
+        const order = lhv.order;
+        const out = new Matrix(lhv.order);
+        for (let j = 0; j < order; j++) {
+            for (let i = 0; i < order; i++) {
+                let inner_producted = false;
+                for (let k = 0; k < order; k++) {
+                    inner_producted || (inner_producted = lhv.matrix[j][k] && rhv.matrix[k][i]);
+                }
+                out.matrix[j][i] = inner_producted;
+            }
+        }
+        return out;
+    }
+    function InplaceAdd(lhv_and_out, rhv) {
+        const order = lhv_and_out.order;
+        for (let j = 0; j < order; j++) {
+            for (let i = 0; i < order; i++) {
+                lhv_and_out.matrix[j][i] = lhv_and_out.matrix[j][i] || rhv.matrix[j][i];
+            }
+        }
+        return;
+    }
+    class AdjacencyMatrix {
+        constructor(order) {
+            this.matrix_ = new Matrix(order);
+        }
+        get matrix() {
+            return this.matrix_;
+        }
+        CalculateInDegrees(vertex_indices) {
+            const order = this.matrix_.order;
+            const indegrees = new Array(order);
+            indegrees.fill(0);
+            vertex_indices.forEach(i => {
+                vertex_indices.forEach(j => {
+                    if (i != j) {
+                        indegrees[i] += this.matrix_.matrix[j][i] ? 1 : 0;
+                    }
+                });
+            });
+            return indegrees;
+        }
+        IsDag() {
+            const order = this.matrix_.order;
+            const is_dag_flags = (new Array(order)).fill(false);
+            const extract_target_vertex_indices = function (is_dag_flags) {
+                const target_vertex_indices = new Array(0);
+                for (let i = 0; i < order; i++) {
+                    if (!is_dag_flags[i]) {
+                        target_vertex_indices.push(i);
+                    }
+                }
+                return target_vertex_indices;
+            };
+            const entry_points_array = new Array(0);
+            let num_dag_vertices = 0;
+            while (true) {
+                const target_vertex_indices = extract_target_vertex_indices(is_dag_flags);
+                const indegrees = this.CalculateInDegrees(target_vertex_indices);
+                const entry_point_set = new Array(0);
+                target_vertex_indices.forEach(i => {
+                    if (indegrees[i] == 0) {
+                        entry_point_set.push(i);
+                    }
+                });
+                if (entry_point_set.length == 0) {
+                    break;
+                }
+                entry_point_set.forEach(i => {
+                    is_dag_flags[i] = true;
+                });
+                entry_points_array.push(entry_point_set);
+                num_dag_vertices += entry_point_set.length;
+                if (order == num_dag_vertices) {
+                    break;
+                }
+            }
+            return (order == num_dag_vertices);
+        }
+        CalculateSorted() {
+            const order = this.matrix_.order;
+            const is_dag_flags = (new Array(order)).fill(false);
+            const extract_target_vertex_indices = function (is_dag_flags) {
+                const target_vertex_indices = new Array(0);
+                for (let i = 0; i < order; i++) {
+                    if (!is_dag_flags[i]) {
+                        target_vertex_indices.push(i);
+                    }
+                }
+                return target_vertex_indices;
+            };
+            const entry_points_array = new Array(0);
+            let num_dag_vertices = 0;
+            while (true) {
+                const target_vertex_indices = extract_target_vertex_indices(is_dag_flags);
+                const indegrees = this.CalculateInDegrees(target_vertex_indices);
+                const entry_point_set = new Array(0);
+                target_vertex_indices.forEach(i => {
+                    if (indegrees[i] == 0) {
+                        entry_point_set.push(i);
+                    }
+                });
+                if (entry_point_set.length == 0) {
+                    break;
+                }
+                entry_point_set.forEach(i => {
+                    is_dag_flags[i] = true;
+                });
+                entry_points_array.push(entry_point_set);
+                num_dag_vertices += entry_point_set.length;
+                if (order == num_dag_vertices) {
+                    break;
+                }
+            }
+            const cycle_vertices = extract_target_vertex_indices(is_dag_flags);
+            return [entry_points_array, cycle_vertices];
+        }
+    }
+    DAG.AdjacencyMatrix = AdjacencyMatrix;
+    class ConnectedMatrix {
+        constructor(adjacency) {
+            this.order_ = adjacency.matrix.order;
+            this.step_array_ = new Array(this.order_ + 1);
+            this.step_array_[0] = SetIdentity(new Matrix(this.order_));
+            this.step_array_[1] = adjacency.matrix.Duplicate();
+            for (let i = 2; i < this.order_ + 1; i++) {
+                this.step_array_[i] = MultiplyMatrix(this.step_array_[i - 1], this.step_array_[1]);
+            }
+            this.connected_ = SetIdentity(new Matrix(this.order_));
+            for (let i = 1; i < this.order_; i++) {
+                InplaceAdd(this.connected_, this.step_array_[i]);
+            }
+        }
+    }
+    DAG.ConnectedMatrix = ConnectedMatrix;
+})(DAG || (DAG = {}));
+var GuiParts;
+(function (GuiParts) {
+    function IsNaturalNumberString(target_string) {
+        const matched_string = target_string.match(/[1-9][0-9]*/);
+        return ((matched_string !== null) && (matched_string[0] == target_string));
+    }
+    function CreateButton(caption, click_callbak) {
+        const button = document.createElement("button");
+        button.innerText = caption;
+        button.addEventListener('click', click_callbak);
+        return button;
+    }
+    function CreateTextInput(width) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.style.minWidth = width.toString();
+        input.style.maxWidth = width.toString();
+        return input;
+    }
+    function CreateNumberInput(width) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.style.textAlign = "right";
+        input.style.minWidth = width.toString();
+        input.style.maxWidth = width.toString();
+        input.value = "1";
+        let backup_value = input.value;
+        input.addEventListener('focus', (event) => {
+            if (event.target === null) {
+                return;
+            }
+            backup_value = event.target.value;
+        });
+        input.addEventListener('change', (event) => {
+            if (event.target === null) {
+                return;
+            }
+            const input_value = event.target.value;
+            if (!IsNaturalNumberString(input_value)) {
+                if (input_value != "-") {
+                    event.target.value = backup_value;
+                }
+            }
+        });
+        return input;
+    }
+    function CreateDiv(elements) {
+        const div = document.createElement("div");
+        elements.forEach(element => {
+            div.appendChild(element);
+        });
+        return div;
+    }
+    function Make2dArray(width, height, initial_value) {
+        return JSON.parse(JSON.stringify((new Array(height)).fill((new Array(width)).fill(initial_value))));
+    }
+    function CreateLeagueStanding(names) {
+        const table = document.createElement("table");
+        const tr = document.createElement("tr");
+        const th = document.createElement("th");
+        tr.appendChild(th);
+        names.forEach(element => {
+            const th = document.createElement("th");
+            th.innerText = element;
+            th.style.textOrientation = "mixed";
+            th.style.writingMode = "vertical-rl";
+            tr.appendChild(th);
+        });
+        table.appendChild(tr);
+        let row_index = 0;
+        const check_box_table = Make2dArray(names.length, names.length, null);
+        names.forEach(element => {
+            const tr = document.createElement("tr");
+            const th = document.createElement("th");
+            th.innerHTML = element;
+            tr.appendChild(th);
+            for (let i = 0; i < names.length; i++) {
+                const td = document.createElement("td");
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.dataset.x = i.toString();
+                checkbox.dataset.y = row_index.toString();
+                checkbox.addEventListener('change', (event) => {
+                    if (event.target === null) {
+                        return;
+                    }
+                    const x = Number(event.target.dataset.x);
+                    const y = Number(event.target.dataset.y);
+                    check_box_table[x][y].disabled = event.target.checked;
+                });
+                if (row_index === i) {
+                    checkbox.disabled = true;
+                }
+                td.appendChild(checkbox);
+                tr.appendChild(td);
+                check_box_table[row_index][i] = checkbox;
+            }
+            table.appendChild(tr);
+            row_index++;
+        });
+        return [table, check_box_table, names.length];
+    }
+    function CreateTextInputTable(columns, rows) {
+        const table = document.createElement("table");
+        const tr = document.createElement("tr");
+        const th = document.createElement("th");
+        tr.appendChild(th);
+        columns.forEach(element => {
+            const th = document.createElement("th");
+            th.innerText = element;
+            th.style.textOrientation = "mixed";
+            th.style.writingMode = "vertical-rl";
+            tr.appendChild(th);
+        });
+        table.appendChild(tr);
+        rows.forEach(element => {
+            const tr = document.createElement("tr");
+            const th = document.createElement("th");
+            th.innerHTML = element;
+            tr.appendChild(th);
+            for (let i = 0; i < columns.length; i++) {
+                const td = document.createElement("td");
+                td.appendChild(CreateNumberInput(32));
+                tr.appendChild(td);
+            }
+            table.appendChild(tr);
+        });
+        return table;
+    }
+    class ListBox {
+        constructor() {
+            this.text_box_ = CreateTextInput(200);
+            this.add_button_ = CreateButton("追加", (event) => {
+                this.AddItem(this.text_box_.value);
+                this.text_box_.value = "";
+            });
+            this.add_div_ = CreateDiv([this.text_box_, this.add_button_]);
+            this.selecter_ = document.createElement("select");
+            this.selecter_div_ = CreateDiv([this.selecter_]);
+            this.delete_button_ = CreateButton("削除", (event) => {
+                this.DeleteItem(this.selecter_.selectedIndex);
+            });
+            this.delete_div_ = CreateDiv([this.delete_button_]);
+            this.container_ = document.createElement("div");
+            this.container_ = CreateDiv([this.add_div_, this.selecter_div_, this.delete_div_]);
+        }
+        AddItem(item_name) {
+            if (item_name == "") {
+                return;
+            }
+            const new_item = document.createElement("option");
+            new_item.innerText = item_name;
+            this.selecter_.append(new_item);
+            this.selecter_.size = this.selecter_.length;
+        }
+        DeleteItem(item_index) {
+            this.selecter_.remove(item_index);
+            this.selecter_.size = this.selecter_.length;
+            this.selecter_.selectedIndex = 0;
+        }
+        get root() {
+            return this.container_;
+        }
+    }
+    GuiParts.ListBox = ListBox;
+    class CheckTable {
+        constructor(th_list) {
+            [this.table_, this.check_box_table_, this.order_] = CreateLeagueStanding(th_list);
+            this.container_ = CreateDiv([this.table_]);
+        }
+        get root() {
+            return this.container_;
+        }
+        get order() {
+            return this.order_;
+        }
+        CreateCheckMatrix() {
+            const matrix = new Array(this.order_);
+            for (let i = 0; i < this.order_; i++) {
+                matrix[i] = new Array(this.order_);
+            }
+            for (let j = 0; j < this.order_; j++) {
+                for (let i = 0; i < this.order_; i++) {
+                    matrix[j][i] = this.check_box_table_[j][i].checked;
+                }
+            }
+            return matrix;
+        }
+    }
+    GuiParts.CheckTable = CheckTable;
+    class TextInputTable {
+        constructor(columns, rows) {
+            this.table_ = CreateTextInputTable(columns, rows);
+            this.container_ = CreateDiv([this.table_]);
+        }
+        get root() {
+            return this.container_;
+        }
+    }
+    GuiParts.TextInputTable = TextInputTable;
+})(GuiParts || (GuiParts = {}));
+/// <reference path="./gui.ts" />
+/// <reference path="./dag.ts" />
+const Initialize = function () {
+    const test_user_list = ["名無し１", "名無し２", "名無し３"];
+    const task_list = [
+        "Task A",
+        "Task B",
+        "Task C",
+        "Task D"
+    ];
+    const user_list = new GuiParts.ListBox();
+    document.body.appendChild(user_list.root);
+    const check_table = new GuiParts.CheckTable(task_list);
+    document.body.appendChild(check_table.root);
+    const text_input_table = new GuiParts.TextInputTable(test_user_list, task_list);
+    document.body.appendChild(text_input_table.root);
+    function solv() {
+        const order = check_table.order;
+        const check_matrix = check_table.CreateCheckMatrix();
+        const adjacency = new DAG.AdjacencyMatrix(order);
+        for (let j = 0; j < order; j++) {
+            for (let i = 0; i < order; i++) {
+                adjacency.matrix.matrix[j][i] = check_matrix[i][j];
+            }
+        }
+        const [dag, cycle] = adjacency.CalculateSorted();
+        console.log(dag);
+        console.log(cycle);
+    }
+    const button = document.createElement('button');
+    button.innerText = "solv";
+    button.addEventListener('click', (event) => {
+        solv();
+    });
+    document.body.appendChild(button);
+    return;
+};
+Initialize();
+
+/******/ })()
+;</script></body>
+
+</html>
