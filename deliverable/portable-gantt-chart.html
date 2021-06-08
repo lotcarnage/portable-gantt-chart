@@ -96,43 +96,6 @@ var DAG;
             });
             return indegrees;
         }
-        IsDag() {
-            const order = this.matrix_.order;
-            const is_dag_flags = (new Array(order)).fill(false);
-            const extract_target_vertex_indices = function (is_dag_flags) {
-                const target_vertex_indices = new Array(0);
-                for (let i = 0; i < order; i++) {
-                    if (!is_dag_flags[i]) {
-                        target_vertex_indices.push(i);
-                    }
-                }
-                return target_vertex_indices;
-            };
-            const entry_points_array = new Array(0);
-            let num_dag_vertices = 0;
-            while (true) {
-                const target_vertex_indices = extract_target_vertex_indices(is_dag_flags);
-                const indegrees = this.CalculateInDegrees(target_vertex_indices);
-                const entry_point_set = new Array(0);
-                target_vertex_indices.forEach(i => {
-                    if (indegrees[i] == 0) {
-                        entry_point_set.push(i);
-                    }
-                });
-                if (entry_point_set.length == 0) {
-                    break;
-                }
-                entry_point_set.forEach(i => {
-                    is_dag_flags[i] = true;
-                });
-                entry_points_array.push(entry_point_set);
-                num_dag_vertices += entry_point_set.length;
-                if (order == num_dag_vertices) {
-                    break;
-                }
-            }
-            return (order == num_dag_vertices);
-        }
         CalculateSorted() {
             const order = this.matrix_.order;
             const is_dag_flags = (new Array(order)).fill(false);
@@ -399,15 +362,18 @@ const Initialize = function () {
         "Task A",
         "Task B",
         "Task C",
-        "Task D"
+        "Task D",
+        "Task E",
+        "Task F",
+        "Task G"
     ];
     const user_list = new GuiParts.ListBox();
     document.body.appendChild(user_list.root);
     const check_table = new GuiParts.CheckTable(task_list);
     document.body.appendChild(check_table.root);
-    const text_input_table = new GuiParts.TextInputTable(test_user_list, task_list);
-    document.body.appendChild(text_input_table.root);
-    function solv() {
+    const dag_area = document.createElement('div');
+    const cycle_area = document.createElement('div');
+    const solv = function () {
         const order = check_table.order;
         const check_matrix = check_table.CreateCheckMatrix();
         const adjacency = new DAG.AdjacencyMatrix(order);
@@ -417,15 +383,33 @@ const Initialize = function () {
             }
         }
         const [dag, cycle] = adjacency.CalculateSorted();
-        console.log(dag);
-        console.log(cycle);
-    }
+        const pickup_tasks = function (task_indices) {
+            const task_set = new Array(0);
+            task_indices.forEach(i => {
+                task_set.push(task_list[i]);
+            });
+            return task_set;
+        };
+        let task_set_text_array = Array(0);
+        dag.forEach(vertices => {
+            const task_set = pickup_tasks(vertices);
+            const task_set_text = "{" + task_set.join(", ") + "}";
+            task_set_text_array.push(task_set_text);
+        });
+        dag_area.innerText = "DAG:" + task_set_text_array.join(" => ");
+        cycle_area.innerText = "Cycle:" + pickup_tasks(cycle).join(", ");
+        return;
+    };
     const button = document.createElement('button');
     button.innerText = "solv";
     button.addEventListener('click', (event) => {
         solv();
     });
     document.body.appendChild(button);
+    document.body.appendChild(dag_area);
+    document.body.appendChild(cycle_area);
+    const text_input_table = new GuiParts.TextInputTable(test_user_list, task_list);
+    document.body.appendChild(text_input_table.root);
     return;
 };
 Initialize();

@@ -7,7 +7,10 @@ const Initialize = function () {
 		"Task A",
 		"Task B",
 		"Task C",
-		"Task D"
+		"Task D",
+		"Task E",
+		"Task F",
+		"Task G"
 	];
 
 
@@ -17,10 +20,11 @@ const Initialize = function () {
 	const check_table = new GuiParts.CheckTable(task_list);
 	document.body.appendChild(check_table.root)
 
-	const text_input_table = new GuiParts.TextInputTable(test_user_list, task_list);
-	document.body.appendChild(text_input_table.root)
 
-	function solv() {
+	const dag_area = document.createElement('div');
+	const cycle_area = document.createElement('div');
+
+	const solv = function () {
 		const order = check_table.order;
 		const check_matrix = check_table.CreateCheckMatrix();
 		const adjacency = new DAG.AdjacencyMatrix(order);
@@ -30,15 +34,37 @@ const Initialize = function () {
 			}
 		}
 		const [dag, cycle] = adjacency.CalculateSorted();
-		console.log(dag);
-		console.log(cycle);
+		const pickup_tasks = function (task_indices: number[]): string[] {
+			const task_set = new Array<string>(0);
+			task_indices.forEach(i => {
+				task_set.push(task_list[i]);
+			});
+			return task_set;
+		}
+
+		let task_set_text_array = Array<string>(0);
+		dag.forEach(vertices => {
+			const task_set = pickup_tasks(vertices);
+			const task_set_text = "{" + task_set.join(", ") + "}";
+			task_set_text_array.push(task_set_text);
+		});
+		dag_area.innerText = "DAG:" + task_set_text_array.join(" => ");
+		cycle_area.innerText = "Cycle:" + pickup_tasks(cycle).join(", ");
+		return;
 	}
 	const button = document.createElement('button');
 	button.innerText = "solv";
 	button.addEventListener('click', (event) => {
 		solv();
 	});
+
 	document.body.appendChild(button)
+	document.body.appendChild(dag_area)
+	document.body.appendChild(cycle_area)
+
+	const text_input_table = new GuiParts.TextInputTable(test_user_list, task_list);
+	document.body.appendChild(text_input_table.root)
+
 	return;
 };
 
