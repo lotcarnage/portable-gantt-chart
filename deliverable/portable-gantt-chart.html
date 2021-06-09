@@ -153,6 +153,71 @@ var DAG;
     }
     DAG.ConnectedMatrix = ConnectedMatrix;
 })(DAG || (DAG = {}));
+var GraphView;
+(function (GraphView) {
+    class DAGView {
+        constructor() {
+            this.canvas_ = document.createElement('canvas');
+            this.canvas_.width = 400;
+            this.canvas_.height = 400;
+        }
+        get node() {
+            return this.canvas_;
+        }
+        static DrawVertex(context, step, vertex, name) {
+            const x = step * (DAGView.box_width_ + DAGView.h_span_);
+            const y = vertex * (DAGView.box_height_ + DAGView.v_span_);
+            context.fillStyle = "white";
+            context.fillRect(x, y, DAGView.box_width_, DAGView.box_height_);
+            context.fillStyle = "black";
+            context.fillText(name, x + 2, y + DAGView.box_height_ - 2);
+            return;
+        }
+        static DrawEdge(context, from_vertex, to_vertex, step_table) {
+            const from_step = step_table[from_vertex];
+            const to_step = step_table[to_vertex];
+            context.beginPath();
+            context.moveTo(from_step * (DAGView.box_width_ + DAGView.h_span_) + DAGView.box_width_, from_vertex * (DAGView.box_height_ + DAGView.v_span_) + Math.floor(DAGView.box_height_ / 2));
+            context.lineTo(to_step * (DAGView.box_width_ + DAGView.h_span_), to_vertex * (DAGView.box_height_ + DAGView.v_span_) + Math.floor(DAGView.box_height_ / 2));
+            context.stroke();
+            return;
+        }
+        Update(dag_vertices_array, name_array, dag_matrix, dag_order) {
+            const canvas_width = dag_vertices_array.length * (DAGView.box_width_ + DAGView.h_span_) + DAGView.h_span_;
+            const canvas_height = dag_order * (DAGView.box_height_ + DAGView.v_span_) + DAGView.v_span_;
+            this.canvas_.width = canvas_width;
+            this.canvas_.height = canvas_height;
+            const context = this.canvas_.getContext('2d');
+            if (context === null) {
+                return;
+            }
+            context.clearRect(0, 0, canvas_width, canvas_height);
+            context.fillStyle = "white";
+            let step = 0;
+            const step_table = new Array(dag_order);
+            dag_vertices_array.forEach(vertices => {
+                vertices.forEach(i => {
+                    step_table[i] = step;
+                    DAGView.DrawVertex(context, step, i, name_array[i]);
+                });
+                step++;
+            });
+            for (let j = 0; j < dag_order; j++) {
+                for (let i = 0; i < dag_order; i++) {
+                    if (dag_matrix[j][i]) {
+                        DAGView.DrawEdge(context, j, i, step_table);
+                    }
+                }
+            }
+            return;
+        }
+    }
+    DAGView.box_width_ = 80;
+    DAGView.box_height_ = 20;
+    DAGView.v_span_ = 4;
+    DAGView.h_span_ = 20;
+    GraphView.DAGView = DAGView;
+})(GraphView || (GraphView = {}));
 var GuiParts;
 (function (GuiParts) {
     function IsNaturalNumberString(target_string) {
@@ -356,6 +421,7 @@ var GuiParts;
 })(GuiParts || (GuiParts = {}));
 /// <reference path="./gui.ts" />
 /// <reference path="./dag.ts" />
+/// <reference path="./graph.ts" />
 const Initialize = function () {
     const test_user_list = ["名無し１", "名無し２", "名無し３"];
     const task_list = [
@@ -373,6 +439,7 @@ const Initialize = function () {
     document.body.appendChild(check_table.root);
     const dag_area = document.createElement('div');
     const cycle_area = document.createElement('div');
+    const dag_view = new GraphView.DAGView();
     const solv = function () {
         const order = check_table.order;
         const check_matrix = check_table.CreateCheckMatrix();
@@ -398,6 +465,7 @@ const Initialize = function () {
         });
         dag_area.innerText = "DAG:" + task_set_text_array.join(" => ");
         cycle_area.innerText = "Cycle:" + pickup_tasks(cycle).join(", ");
+        dag_view.Update(dag, task_list, adjacency.matrix.matrix, adjacency.matrix.order);
         return;
     };
     const button = document.createElement('button');
@@ -408,6 +476,7 @@ const Initialize = function () {
     document.body.appendChild(button);
     document.body.appendChild(dag_area);
     document.body.appendChild(cycle_area);
+    document.body.appendChild(dag_view.node);
     const text_input_table = new GuiParts.TextInputTable(test_user_list, task_list);
     document.body.appendChild(text_input_table.root);
     return;

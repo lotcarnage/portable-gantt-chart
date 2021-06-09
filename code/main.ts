@@ -1,5 +1,6 @@
 /// <reference path="./gui.ts" />
 /// <reference path="./dag.ts" />
+/// <reference path="./graph.ts" />
 
 const Initialize = function () {
 	const test_user_list = ["名無し１", "名無し２", "名無し３"];
@@ -23,6 +24,7 @@ const Initialize = function () {
 
 	const dag_area = document.createElement('div');
 	const cycle_area = document.createElement('div');
+	const dag_view = new GraphView.DAGView();
 
 	const solv = function () {
 		const order = check_table.order;
@@ -50,6 +52,7 @@ const Initialize = function () {
 		});
 		dag_area.innerText = "DAG:" + task_set_text_array.join(" => ");
 		cycle_area.innerText = "Cycle:" + pickup_tasks(cycle).join(", ");
+		dag_view.Update(dag, task_list, adjacency.matrix.matrix, adjacency.matrix.order);
 		return;
 	}
 	const button = document.createElement('button');
@@ -61,6 +64,7 @@ const Initialize = function () {
 	document.body.appendChild(button)
 	document.body.appendChild(dag_area)
 	document.body.appendChild(cycle_area)
+	document.body.appendChild(dag_view.node);
 
 	const text_input_table = new GuiParts.TextInputTable(test_user_list, task_list);
 	document.body.appendChild(text_input_table.root)
