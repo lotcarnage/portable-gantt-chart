@@ -306,7 +306,7 @@ var GuiParts;
     function Make2dArray(width, height, initial_value) {
         return JSON.parse(JSON.stringify((new Array(height)).fill((new Array(width)).fill(initial_value))));
     }
-    function CreateLeagueStanding(names) {
+    function CreateLeagueStanding(names, change_callback) {
         const table = document.createElement("table");
         const tr = document.createElement("tr");
         const th = document.createElement("th");
@@ -339,6 +339,9 @@ var GuiParts;
                     const x = Number(event.target.dataset.x);
                     const y = Number(event.target.dataset.y);
                     check_box_table[x][y].disabled = event.target.checked;
+                    if (change_callback) {
+                        change_callback();
+                    }
                 });
                 if (row_index === i) {
                     checkbox.disabled = true;
@@ -416,8 +419,8 @@ var GuiParts;
     }
     GuiParts.ListBox = ListBox;
     class CheckTable {
-        constructor(th_list) {
-            [this.table_, this.check_box_table_, this.order_] = CreateLeagueStanding(th_list);
+        constructor(th_list, change_callback) {
+            [this.table_, this.check_box_table_, this.order_] = CreateLeagueStanding(th_list, change_callback);
             this.container_ = CreateDiv([this.table_]);
         }
         get root() {
@@ -465,13 +468,6 @@ const Initialize = function () {
         "Task F",
         "Task G"
     ];
-    const user_list = new GuiParts.ListBox();
-    document.body.appendChild(user_list.root);
-    const check_table = new GuiParts.CheckTable(task_list);
-    document.body.appendChild(check_table.root);
-    const dag_area = document.createElement('div');
-    const cycle_area = document.createElement('div');
-    const dag_view = new GraphView.DAGView();
     const solv = function () {
         const order = check_table.order;
         const check_matrix = check_table.CreateCheckMatrix();
@@ -500,6 +496,13 @@ const Initialize = function () {
         dag_view.Update(24, dag, task_list, adjacency.matrix.matrix, adjacency.matrix.order);
         return;
     };
+    const user_list = new GuiParts.ListBox();
+    document.body.appendChild(user_list.root);
+    const check_table = new GuiParts.CheckTable(task_list, solv);
+    document.body.appendChild(check_table.root);
+    const dag_area = document.createElement('div');
+    const cycle_area = document.createElement('div');
+    const dag_view = new GraphView.DAGView();
     const button = document.createElement('button');
     button.innerText = "solv";
     button.addEventListener('click', (event) => {

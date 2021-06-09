@@ -56,7 +56,7 @@ namespace GuiParts {
 		return JSON.parse(JSON.stringify((new Array<Array<T | null>>(height)).fill((new Array<T | null>(width)).fill(initial_value))));
 	}
 
-	function CreateLeagueStanding(names: string[]): [HTMLTableElement, HTMLInputElement[][], number] {
+	function CreateLeagueStanding(names: string[], change_callback: () => any | null): [HTMLTableElement, HTMLInputElement[][], number] {
 		const table = document.createElement("table");
 		const tr = document.createElement("tr");
 		const th = document.createElement("th");
@@ -90,6 +90,9 @@ namespace GuiParts {
 					const x = Number((event.target as HTMLInputElement).dataset.x);
 					const y = Number((event.target as HTMLInputElement).dataset.y);
 					check_box_table[x][y].disabled = (event.target as HTMLInputElement).checked;
+					if (change_callback) {
+						change_callback();
+					}
 				});
 				if (row_index === i) {
 					checkbox.disabled = true;
@@ -190,8 +193,8 @@ namespace GuiParts {
 		private container_: HTMLDivElement;
 		private check_box_table_: HTMLInputElement[][];
 		private order_: number;
-		constructor(th_list: string[]) {
-			[this.table_, this.check_box_table_, this.order_] = CreateLeagueStanding(th_list)
+		constructor(th_list: string[], change_callback: () => any | null) {
+			[this.table_, this.check_box_table_, this.order_] = CreateLeagueStanding(th_list, change_callback)
 			this.container_ = CreateDiv([this.table_])
 		}
 

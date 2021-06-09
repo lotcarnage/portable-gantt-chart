@@ -14,18 +14,6 @@ const Initialize = function () {
 		"Task G"
 	];
 
-
-	const user_list = new GuiParts.ListBox();
-	document.body.appendChild(user_list.root)
-
-	const check_table = new GuiParts.CheckTable(task_list);
-	document.body.appendChild(check_table.root)
-
-
-	const dag_area = document.createElement('div');
-	const cycle_area = document.createElement('div');
-	const dag_view = new GraphView.DAGView();
-
 	const solv = function () {
 		const order = check_table.order;
 		const check_matrix = check_table.CreateCheckMatrix();
@@ -55,6 +43,18 @@ const Initialize = function () {
 		dag_view.Update(24, dag, task_list, adjacency.matrix.matrix, adjacency.matrix.order);
 		return;
 	}
+
+	const user_list = new GuiParts.ListBox();
+	document.body.appendChild(user_list.root)
+
+	const check_table = new GuiParts.CheckTable(task_list, solv);
+	document.body.appendChild(check_table.root)
+
+
+	const dag_area = document.createElement('div');
+	const cycle_area = document.createElement('div');
+	const dag_view = new GraphView.DAGView();
+
 	const button = document.createElement('button');
 	button.innerText = "solv";
 	button.addEventListener('click', (event) => {
