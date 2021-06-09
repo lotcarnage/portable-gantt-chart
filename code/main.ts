@@ -52,7 +52,7 @@ const Initialize = function () {
 		});
 		dag_area.innerText = "DAG:" + task_set_text_array.join(" => ");
 		cycle_area.innerText = "Cycle:" + pickup_tasks(cycle).join(", ");
-		dag_view.Update(dag, task_list, adjacency.matrix.matrix, adjacency.matrix.order);
+		dag_view.Update(24, dag, task_list, adjacency.matrix.matrix, adjacency.matrix.order);
 		return;
 	}
 	const button = document.createElement('button');
